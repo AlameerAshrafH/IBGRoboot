@@ -1,0 +1,394 @@
+# all_assertions.ibgrobot
+#
+# A single .ibgrobot file demonstrating all 20 assertions with minimal examples.
+# Each test case includes:
+#   - A short JSON body under `parameters`.
+#   - One "expected_results" entry referencing the assertion type.
+#   - "inputs" showing how to configure each assertion.
+
+name: "Comprehensive Example of All Assertions"
+url: "https://api.example.com/test"
+method: POST
+
+headers:
+  - key: "Content-Type"
+    value: "application/json"
+
+test_cases:
+
+  # -------------------------------------------------------------------------
+  # 1) Schema Compliance
+  # -------------------------------------------------------------------------
+  - description: "Schema Compliance Example"
+    parameters:
+      - key: "body"
+        value: |
+          {
+            "id": 123,
+            "name": "Test"
+          }
+    expected_results:
+      - assertion: "Schema Compliance"
+        inputs:
+          schema:
+            id: "number"
+            name: "string"
+          strict: true
+    # Example: We require `id` to be a number and `name` to be a string.
+    # 'strict: true' means no other fields are allowed.
+
+  # -------------------------------------------------------------------------
+  # 2) Required Fields
+  # -------------------------------------------------------------------------
+  - description: "Required Fields Example"
+    parameters:
+      - key: "body"
+        value: |
+          {
+            "id": 101
+          }
+    expected_results:
+      - assertion: "Required Fields"
+        inputs:
+          - "id"
+          - "name"
+    # We'll fail because "name" is missing.
+
+  # -------------------------------------------------------------------------
+  # 3) No Additional Fields
+  # -------------------------------------------------------------------------
+  - description: "No Additional Fields Example"
+    parameters:
+      - key: "body"
+        value: |
+          {
+            "id": 200,
+            "name": "Allowed Name",
+            "extraField": "This is not allowed"
+          }
+    expected_results:
+      - assertion: "No Additional Fields"
+        inputs:
+          - "id"
+          - "name"
+    # We'll fail if we detect "extraField".
+
+  # -------------------------------------------------------------------------
+  # 4) String Field Validation
+  # -------------------------------------------------------------------------
+  - description: "String Field Validation Example"
+    parameters:
+      - key: "body"
+        value: |
+          {
+            "username": "  ", 
+            "email": "user@example.com"
+          }
+    expected_results:
+      - assertion: "String Field Validation"
+        inputs:
+          fields:
+            - "username"
+            - "email"
+          minLength: 3
+          maxLength: 30
+          pattern: "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$"
+    # We test that username and email are strings within length bounds.
+    # Also checking that 'email' matches a pattern. 
+    # "username" is blank, so it may fail the minLength or pattern check.
+
+  # -------------------------------------------------------------------------
+  # 5) Number Field Validation
+  # -------------------------------------------------------------------------
+  - description: "Number Field Validation Example"
+    parameters:
+      - key: "body"
+        value: |
+          {
+            "age": 35.5,
+            "price": 201
+          }
+    expected_results:
+      - assertion: "Number Field Validation"
+        inputs:
+          fields:
+            - "age"
+            - "price"
+          min: 0
+          max: 200
+          integerOnly: true
+    # We require these fields to be numbers, <= 200, integer-only. 
+    # "age" is not integer, "price" is out of range. Both could fail.
+
+  # -------------------------------------------------------------------------
+  # 6) Boolean Field Validation
+  # -------------------------------------------------------------------------
+  - description: "Boolean Field Validation Example"
+    parameters:
+      - key: "body"
+        value: |
+          {
+            "isActive": true,
+            "hasDiscount": "true"
+          }
+    expected_results:
+      - assertion: "Boolean Field Validation"
+        inputs:
+          - "isActive"
+          - "hasDiscount"
+    # Fails if "hasDiscount" is not a real boolean.
+
+  # -------------------------------------------------------------------------
+  # 7) Array Validation
+  # -------------------------------------------------------------------------
+  - description: "Array Validation Example"
+    parameters:
+      - key: "body"
+        value: |
+          {
+            "tags": ["tag1", "tag2", "tag2"]
+          }
+    expected_results:
+      - assertion: "Array Validation"
+        inputs:
+          field: "tags"
+          minLength: 1
+          maxLength: 5
+          enforceUnique: true
+    # We'll fail because enforceUnique is true but "tag2" is duplicated.
+
+  # -------------------------------------------------------------------------
+  # 8) Nested Object Validation
+  # -------------------------------------------------------------------------
+  - description: "Nested Object Validation Example"
+    parameters:
+      - key: "body"
+        value: |
+          {
+            "address": {
+              "city": "New York"
+            }
+          }
+    expected_results:
+      - assertion: "Nested Object Validation"
+        inputs:
+          field: "address"
+          requiredFields:
+            - "street"
+            - "city"
+    # Fails because "street" is missing within "address".
+
+  # -------------------------------------------------------------------------
+  # 9) Pattern Matching
+  # -------------------------------------------------------------------------
+  - description: "Pattern Matching Example"
+    parameters:
+      - key: "body"
+        value: |
+          {
+            "sku": "ABC-123x"
+          }
+    expected_results:
+      - assertion: "Pattern Matching"
+        inputs:
+          field: "sku"
+          pattern: "^[A-Z0-9-]+$"
+    # Fails if 'sku' has characters outside A-Z, 0-9, or '-'.
+    # "ABC-123x" might fail because of 'x', if we consider uppercase only.
+
+  # -------------------------------------------------------------------------
+  # 10) Enumeration Validation
+  # -------------------------------------------------------------------------
+  - description: "Enumeration Validation Example"
+    parameters:
+      - key: "body"
+        value: |
+          {
+            "status": "archived"
+          }
+    expected_results:
+      - assertion: "Enumeration Validation"
+        inputs:
+          field: "status"
+          allowedValues:
+            - "active"
+            - "pending"
+            - "inactive"
+    # Fails because "archived" is not in the allowed list.
+
+  # -------------------------------------------------------------------------
+  # 11) Date Field Validation
+  # -------------------------------------------------------------------------
+  - description: "Date Field Validation Example"
+    parameters:
+      - key: "body"
+        value: |
+          {
+            "createdAt": "2023-02-30"
+          }
+    expected_results:
+      - assertion: "Date Field Validation"
+        inputs:
+          field: "createdAt"
+          validateActualDate: true
+    # "2023-02-30" is an invalid date, so it fails.
+
+  # -------------------------------------------------------------------------
+  # 12) Nullability
+  # -------------------------------------------------------------------------
+  - description: "Nullability Example"
+    parameters:
+      - key: "body"
+        value: |
+          {
+            "id": null,
+            "description": null
+          }
+    expected_results:
+      - assertion: "Nullability"
+        inputs:
+          nonNullable:
+            - "id"
+          nullable:
+            - "description"
+    # Fails because "id" is non-nullable but is null.
+
+  # -------------------------------------------------------------------------
+  # 13) Default Values
+  # -------------------------------------------------------------------------
+  - description: "Default Values Example"
+    parameters:
+      - key: "body"
+        value: |
+          {
+            "name": "Sample"
+          }
+    expected_results:
+      - assertion: "Default Values"
+        inputs:
+          field: "status"
+          defaultValue: "active"
+    # Fails because we expect "status" to be present and have default "active".
+
+  # -------------------------------------------------------------------------
+  # 14) Strict Validation
+  # -------------------------------------------------------------------------
+  - description: "Strict Validation Example"
+    parameters:
+      - key: "body"
+        value: |
+          {
+            "id": 100,
+            "name": "Strict"
+          }
+    expected_results:
+      - assertion: "Strict Validation"
+        inputs:
+          allowedFields:
+            - "id"
+        # Fails if 'name' is not in the allowedFields list.
+
+  # -------------------------------------------------------------------------
+  # 15) Custom Logic
+  # -------------------------------------------------------------------------
+  - description: "Custom Logic Example"
+    parameters:
+      - key: "body"
+        value: |
+          {
+            "hasDiscount": true
+          }
+    expected_results:
+      - assertion: "Custom Logic"
+        inputs:
+          ifField: "hasDiscount"
+          thenField: "discountValue"
+    # Fails if "hasDiscount" is true but "discountValue" is undefined.
+
+  # -------------------------------------------------------------------------
+  # 16) Data Transformation
+  # -------------------------------------------------------------------------
+  - description: "Data Transformation Example"
+    parameters:
+      - key: "body"
+        value: |
+          {
+            "price": "10.99"
+          }
+    expected_results:
+      - assertion: "Data Transformation"
+        inputs:
+          field: "price"
+          expectedTypeAfterCoercion: "number"
+    # Fails if "price" remains a string instead of being coerced to number by the system.
+
+  # -------------------------------------------------------------------------
+  # 17) Multi-Type Fields
+  # -------------------------------------------------------------------------
+  - description: "Multi-Type Fields Example"
+    parameters:
+      - key: "body"
+        value: |
+          {
+            "optionalValue": true
+          }
+    expected_results:
+      - assertion: "Multi-Type Fields"
+        inputs:
+          field: "optionalValue"
+          allowedTypes:
+            - "string"
+            - "number"
+    # Fails if 'optionalValue' is boolean, since allowed types are string or number.
+
+  # -------------------------------------------------------------------------
+  # 18) Error Messaging
+  # -------------------------------------------------------------------------
+  - description: "Error Messaging Example"
+    parameters:
+      - key: "body"
+        value: |
+          {
+            "error": "Invalid email format for field 'emailAddress'"
+          }
+    expected_results:
+      - assertion: "Error Messaging"
+        inputs:
+          errorField: "error"
+          messageContains: "Invalid email format"
+    # Passes if the 'error' field is a string containing "Invalid email format".
+
+  # -------------------------------------------------------------------------
+  # 19) Read-Only Fields
+  # -------------------------------------------------------------------------
+  - description: "Read-Only Fields Example"
+    parameters:
+      - key: "body"
+        value: |
+          {
+            "id": 999,
+            "createdAt": "2023-03-03T12:00:00Z"
+          }
+    expected_results:
+      - assertion: "Read-Only Fields"
+        inputs:
+          - "id"
+          - "createdAt"
+    # Fails if these fields are present, meaning the client tried to set them.
+
+  # -------------------------------------------------------------------------
+  # 20) Custom Validators
+  # -------------------------------------------------------------------------
+  - description: "Custom Validators Example"
+    parameters:
+      - key: "body"
+        value: |
+          {
+            "username": "bad@chars"
+          }
+    expected_results:
+      - assertion: "Custom Validators"
+        inputs:
+          field: "username"
+          disallowedPattern: "[!@#$%^&*()]+"
+    # Fails if "username" contains any disallowed character from the pattern.
