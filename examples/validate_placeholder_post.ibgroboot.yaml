@@ -1,0 +1,95 @@
+# validation_posts.ibgrobot
+
+name: "Validate JSONPlaceholder /posts/1 Response"
+url: "https://jsonplaceholder.typicode.com/posts/1"
+method: GET
+headers:
+  - key: "Accept"
+    value: "application/json"
+  - key: "Custom-Header"
+    value: "MyCustomValue"
+
+suite_pre_script: "/Users/Shared/Projects/IBGRoboot/examples/stateful_pre_script.mjs"
+suite_post_script: "./scripts/post_test_posts.sh"
+
+save_to_history: false
+sync_to_slack: false
+report_results: true
+target_squads: 
+  - "Crashes"
+target_owners:
+  - "alashraf@instabug.com"
+
+test_cases:
+  - description: "Test /posts/1 Endpoint Returns Valid Post"
+    parameters: []
+    query: []
+    pre_request_script: "./scripts/pre_test_posts.sh" 
+    post_request_script: "./scripts/post_test_posts.sh"
+
+    expected_results:
+      - assertion: "Schema Compliance"
+        inputs:
+          schema:
+            userId: "number"
+            title: "string"
+          strict: false
+
+      - assertion: "Required Fields"
+        inputs:
+          - "userId"
+          - "id"
+          - "title"
+          - "body"
+
+      - assertion: "No Additional Fields"
+        inputs:
+          - "userId"
+          - "id"
+          - "title"
+          - "body"
+
+      - assertion: "Number Field Validation"
+        inputs:
+          fields:
+            - "userId"
+            - "body"
+          min: 0
+          max: 200
+          integerOnly: true
+
+      - assertion: "String Field Validation"
+        inputs:
+          fields:
+            - "title"
+            - "body"
+          minLength: 3
+          maxLength: 30
+
+      - assertion: "Boolean Field Validation"
+        inputs:
+          - "isActive"
+          - "hasDiscount"
+
+      - assertion: "Nullability"
+        inputs:
+          nullable:
+            - "userId"
+            - "id"
+            - "title"
+
+      - assertion: "Custom"
+        inputs:
+          path: "/Users/Shared/Projects/IBGRoboot/examples/custom_data_check.js"
+          config: "Body is title"
+
+      - assertion: "Strict Validation"
+        inputs:
+          allowOnlyDefinedFields: true
+
+      - assertion: "Custom Assertion"
+        inputs:
+          runner: "./scripts/custom_assertion.js"
+
+
+    
